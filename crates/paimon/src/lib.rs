@@ -30,6 +30,9 @@ pub mod table;
 pub use catalog::Catalog;
 pub use catalog::FileSystemCatalog;
 
+pub use spec::{Consumer, ConsumerFileStatus, ConsumerInfo};
+pub use table::{ConsumerManager, DEFAULT_MAIN_BRANCH};
+
 pub use table::{
     DataSplit, DataSplitBuilder, DeletionFile, PartitionBucket, Plan, ReadBuilder, SnapshotManager,
     Table, TableRead, TableScan,
