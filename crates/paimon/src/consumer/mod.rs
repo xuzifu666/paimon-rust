@@ -15,25 +15,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod error;
-pub use error::Error;
-pub use error::Result;
+//! Consumer management module for Paimon tables.
+//!
+//! This module provides functionality to manage consumer offsets and progress
+//! for stream processing scenarios.
 
-mod arrow;
-pub mod catalog;
-pub mod consumer;
-mod deletion_vector;
-pub mod file_index;
-pub mod io;
-pub mod spec;
-pub mod table;
+mod consumer;
+mod consumer_manager;
 
-pub use catalog::Catalog;
-pub use catalog::FileSystemCatalog;
-
-pub use consumer::{Consumer, ConsumerManager};
-
-pub use table::{
-    DataSplit, DataSplitBuilder, DeletionFile, PartitionBucket, Plan, ReadBuilder, SnapshotManager,
-    Table, TableRead, TableScan,
-};
+pub use consumer::Consumer;
+pub use consumer_manager::ConsumerManager;
