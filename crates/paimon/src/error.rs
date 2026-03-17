@@ -17,7 +17,7 @@
 
 use snafu::prelude::*;
 
-/// Result type used in paimon.
+/// Result type use in paimon.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Error type for paimon.
