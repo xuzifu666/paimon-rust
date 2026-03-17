@@ -22,6 +22,7 @@ mod read_builder;
 mod snapshot_manager;
 mod source;
 mod table_scan;
+mod consumer_manager;
 
 use crate::Result;
 use arrow_array::RecordBatch;
@@ -91,3 +92,5 @@ impl Table {
 
 /// A stream of arrow [`RecordBatch`]es.
 pub type ArrowRecordBatchStream = BoxStream<'static, Result<RecordBatch>>;
+
+pub use consumer_manager::{ConsumerManager, DEFAULT_MAIN_BRANCH};
