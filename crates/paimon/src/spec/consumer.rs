@@ -76,9 +76,15 @@ impl Consumer {
                 }
                 Err(e) => {
                     // Check if file doesn't exist
-                    if e.to_string().contains("not found")
-                        || e.to_string().contains("No such file")
-                        || e.to_string().contains("is not found")
+                    // Handle different error messages across platforms (Windows/Linux/macOS)
+                    let error_str = e.to_string().to_lowercase();
+                    if error_str.contains("not found")
+                        || error_str.contains("no such file")
+                        || error_str.contains("is not found")
+                        || error_str.contains("notexist")
+                        || error_str.contains("does not exist")
+                        || error_str.contains("invalid")
+                    // Windows may return "invalid filename"
                     {
                         return Ok(None);
                     }
