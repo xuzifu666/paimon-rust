@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 
 /// Consumer which contains next snapshot.
 ///
-/// Reference: <https://github.com/apache/paimon/blob/release-0.8.2/paimon-core/src/main/java/org/apache/paimon/consumer/Consumer.java>
+/// Reference: <https://github.com/apache/paimon/blob/release-1.3/paimon-core/src/main/java/org/apache/paimon/consumer/Consumer.java>
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Consumer {
     #[serde(rename = "nextSnapshot")]

@@ -24,7 +24,7 @@ use std::collections::HashMap;
 
 /// Manage consumer groups.
 ///
-/// Reference: <https://github.com/apache/paimon/blob/release-0.8.2/paimon-core/src/main/java/org/apache/paimon/consumer/ConsumerManager.java>
+/// Reference: <https://github.com/apache/paimon/blob/release-1.3/paimon-core/src/main/java/org/apache/paimon/consumer/ConsumerManager.java>
 #[derive(Debug, Clone)]
 pub struct ConsumerManager {
     file_io: FileIO,
