@@ -252,7 +252,7 @@ mod tests {
 
     async fn create_test_manager() -> (ConsumerManager, tempfile::TempDir) {
         let temp_dir = tempfile::tempdir().unwrap();
-        let file_io = FileIOBuilder::new("memory").build().unwrap();
+        let file_io = FileIOBuilder::new("file").build().unwrap();
         let manager = ConsumerManager::new(file_io, temp_dir.path().to_string_lossy().to_string());
         (manager, temp_dir)
     }
