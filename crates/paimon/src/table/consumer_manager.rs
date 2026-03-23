@@ -248,12 +248,14 @@ impl ConsumerManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::io::FileIOBuilder;
+    use crate::io::FileIO;
+    use url::Url;
 
     async fn create_test_manager() -> (ConsumerManager, tempfile::TempDir) {
         let temp_dir = tempfile::tempdir().unwrap();
-        let file_io = FileIOBuilder::new("file").build().unwrap();
-        let table_path = format!("file:{}", temp_dir.path().to_string_lossy());
+        let temp_path = temp_dir.path().to_string_lossy().to_string();
+        let file_io = FileIO::from_path(&temp_path).unwrap().build().unwrap();
+        let table_path = Url::from_file_path(&temp_path).unwrap().to_string();
         let manager = ConsumerManager::new(file_io, table_path);
         (manager, temp_dir)
     }
