@@ -36,7 +36,8 @@ pub mod table;
 pub use catalog::Catalog;
 pub use catalog::FileSystemCatalog;
 
+pub use spec::Consumer;
 pub use table::{
-    DataSplit, DataSplitBuilder, DeletionFile, PartitionBucket, Plan, ReadBuilder, SnapshotManager,
-    Table, TableRead, TableScan,
+    ConsumerManager, DataSplit, DataSplitBuilder, DeletionFile, PartitionBucket, Plan, ReadBuilder,
+    SnapshotManager, Table, TableRead, TableScan,
 };

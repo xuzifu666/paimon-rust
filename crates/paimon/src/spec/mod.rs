@@ -53,4 +53,6 @@ pub use objects_file::from_avro_bytes;
 pub(crate) mod stats;
 mod types;
 pub use types::*;
+mod consumer;
 mod partition_utils;
+pub use consumer::Consumer;

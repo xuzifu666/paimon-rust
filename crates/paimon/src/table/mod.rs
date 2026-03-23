@@ -18,6 +18,7 @@
 //! Table API for Apache Paimon
 
 pub(crate) mod bin_pack;
+mod consumer_manager;
 mod read_builder;
 mod snapshot_manager;
 mod source;
@@ -25,6 +26,7 @@ mod table_scan;
 
 use crate::Result;
 use arrow_array::RecordBatch;
+pub use consumer_manager::ConsumerManager;
 use futures::stream::BoxStream;
 pub use read_builder::{ReadBuilder, TableRead};
 pub use snapshot_manager::SnapshotManager;
