@@ -19,10 +19,11 @@ use crate::error::*;
 use std::collections::HashMap;
 use std::ops::Range;
 use std::sync::Arc;
+use std::time::SystemTime;
 
 use bytes::Bytes;
+use chrono::{DateTime, Utc};
 use opendal::raw::normalize_root;
-use opendal::raw::Timestamp;
 use opendal::Operator;
 use snafu::ResultExt;
 use url::Url;
@@ -105,7 +106,9 @@ impl FileIO {
         Ok(FileStatus {
             size: meta.content_length(),
             is_dir: meta.is_dir(),
-            last_modified: meta.last_modified(),
+            last_modified: meta
+                .last_modified()
+                .map(|v| DateTime::<Utc>::from(SystemTime::from(v))),
             path: path.to_string(),
         })
     }
@@ -129,20 +132,18 @@ impl FileIO {
         let mut statuses = Vec::new();
         let list_path_normalized = list_path.trim_start_matches('/');
         for entry in entries {
-            // opendal list_with includes the root directory itself as the first entry.
-            // The root entry's path equals list_path (with or without leading slash).
-            // Skip it so callers only see the direct children.
             let entry_path = entry.path();
-            let entry_path_normalized = entry_path.trim_start_matches('/');
-            if entry_path_normalized == list_path_normalized {
+            if entry_path.trim_start_matches('/') == list_path_normalized {
                 continue;
             }
             let meta = entry.metadata();
             statuses.push(FileStatus {
                 size: meta.content_length(),
                 is_dir: meta.is_dir(),
-                path: format!("{base_path}{}", entry.path()),
-                last_modified: meta.last_modified(),
+                path: format!("{base_path}{entry_path}"),
+                last_modified: meta
+                    .last_modified()
+                    .map(|v| DateTime::<Utc>::from(SystemTime::from(v))),
             });
         }
 
@@ -298,7 +299,7 @@ pub struct FileStatus {
     pub size: u64,
     pub is_dir: bool,
     pub path: String,
-    pub last_modified: Option<Timestamp>,
+    pub last_modified: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug)]
@@ -324,7 +325,9 @@ impl InputFile {
             size: meta.content_length(),
             is_dir: meta.is_dir(),
             path: self.path.clone(),
-            last_modified: meta.last_modified(),
+            last_modified: meta
+                .last_modified()
+                .map(|v| DateTime::<Utc>::from(SystemTime::from(v))),
         })
     }
 
@@ -387,17 +390,11 @@ mod file_action_test {
     use bytes::Bytes;
 
     fn setup_memory_file_io() -> FileIO {
-        let storage = Storage::Memory;
-        FileIO {
-            storage: Arc::new(storage),
-        }
+        FileIOBuilder::new("memory").build().unwrap()
     }
 
     fn setup_fs_file_io() -> FileIO {
-        let storage = Storage::LocalFs;
-        FileIO {
-            storage: Arc::new(storage),
-        }
+        FileIOBuilder::new("file").build().unwrap()
     }
 
     async fn common_test_get_status(file_io: &FileIO, path: &str) {
@@ -501,6 +498,62 @@ mod file_action_test {
     }
 
     #[tokio::test]
+    async fn test_empty_path_should_return_error_for_exists_fs() {
+        let file_io = setup_fs_file_io();
+        let result = file_io.exists("").await;
+        assert!(matches!(result, Err(Error::ConfigInvalid { .. })));
+    }
+
+    #[tokio::test]
+    async fn test_empty_path_should_return_error_for_exists_memory() {
+        let file_io = setup_memory_file_io();
+        let result = file_io.exists("").await;
+        assert!(matches!(result, Err(Error::ConfigInvalid { .. })));
+    }
+
+    #[tokio::test]
+    async fn test_memory_operator_reuse_across_file_io_calls() {
+        let file_io = setup_memory_file_io();
+        let path = "memory:/tmp/reuse_case";
+        let dir = "memory:/tmp/";
+
+        file_io
+            .new_output(path)
+            .unwrap()
+            .write(Bytes::from("data"))
+            .await
+            .unwrap();
+
+        assert!(file_io.exists(path).await.unwrap());
+        assert_eq!(file_io.get_status(path).await.unwrap().size, 4);
+        assert!(file_io
+            .list_status(dir)
+            .await
+            .unwrap()
+            .iter()
+            .any(|status| status.path == path));
+
+        file_io.delete_dir(dir).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_memory_operator_not_shared_between_file_io_instances() {
+        let file_io_1 = setup_memory_file_io();
+        let file_io_2 = setup_memory_file_io();
+        let path = "memory:/tmp/reuse_isolation_case";
+
+        file_io_1
+            .new_output(path)
+            .unwrap()
+            .write(Bytes::from("data"))
+            .await
+            .unwrap();
+
+        assert!(file_io_1.exists(path).await.unwrap());
+        assert!(!file_io_2.exists(path).await.unwrap());
+    }
+
+    #[tokio::test]
     async fn test_get_status_fs() {
         let file_io = setup_fs_file_io();
         common_test_get_status(&file_io, "file:/tmp/test_file_get_status_fs").await;
@@ -548,17 +601,11 @@ mod input_output_test {
     use bytes::Bytes;
 
     fn setup_memory_file_io() -> FileIO {
-        let storage = Storage::Memory;
-        FileIO {
-            storage: Arc::new(storage),
-        }
+        FileIOBuilder::new("memory").build().unwrap()
     }
 
     fn setup_fs_file_io() -> FileIO {
-        let storage = Storage::LocalFs;
-        FileIO {
-            storage: Arc::new(storage),
-        }
+        FileIOBuilder::new("file").build().unwrap()
     }
 
     async fn common_test_output_file_write_and_read(file_io: &FileIO, path: &str) {
