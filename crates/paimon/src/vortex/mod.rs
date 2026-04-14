@@ -15,36 +15,30 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod error;
-pub use error::Error;
-pub use error::Result;
+//! Vortex file format support for Apache Paimon.
+//!
+//! Vortex is a next-generation columnar file format designed for high-performance
+//! data processing with excellent compression and fast query performance.
+//!
+//! Reference: <https://github.com/apache/paimon/blob/release-0.8.2/paimon-vortex>
 
-pub mod common;
-pub use common::{CatalogOptions, Options};
+mod format;
+pub use format::FileFormat;
 
-pub mod api;
-pub use api::rest_api::RESTApi;
+mod format_options;
+pub use format_options::VortexFormatOptions;
 
-pub mod arrow;
-pub mod btree;
-pub mod catalog;
-mod deletion_vector;
-pub mod file_index;
-pub mod vortex;
-pub mod io;
-mod predicate_stats;
-pub mod spec;
-pub mod table;
-#[cfg(feature = "fulltext")]
-pub mod tantivy;
+mod format_impl;
+pub use format_impl::VortexFileFormat;
 
-pub use catalog::Catalog;
-pub use catalog::CatalogFactory;
-pub use catalog::FileSystemCatalog;
+mod validation;
+pub use validation::validate_row_type;
 
-pub use table::{
-    CommitMessage, DataSplit, DataSplitBuilder, DeletionFile, PartitionBucket, Plan, RESTEnv,
-    RESTSnapshotCommit, ReadBuilder, RenamingSnapshotCommit, RowRange, SnapshotCommit,
-    SnapshotManager, Table, TableCommit, TableRead, TableScan, TableWrite, TagManager,
-    WriteBuilder,
-};
+pub mod reader;
+pub use reader::{VortexReader, VortexReaderFactory};
+
+pub mod writer;
+pub use writer::{VortexWriter, VortexWriterFactory};
+
+pub mod utils;
+pub mod types;

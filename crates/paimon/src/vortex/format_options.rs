@@ -15,36 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod error;
-pub use error::Error;
-pub use error::Result;
+//! Vortex file format configuration.
 
-pub mod common;
-pub use common::{CatalogOptions, Options};
+/// Vortex file format configuration.
+#[derive(Debug, Clone)]
+pub struct VortexFormatOptions {
+    /// Batch size for reading.
+    pub read_batch_size: usize,
+    /// Batch size for writing.
+    pub write_batch_size: usize,
+    /// Memory limit for writing in bytes.
+    pub write_batch_memory: usize,
+}
 
-pub mod api;
-pub use api::rest_api::RESTApi;
-
-pub mod arrow;
-pub mod btree;
-pub mod catalog;
-mod deletion_vector;
-pub mod file_index;
-pub mod vortex;
-pub mod io;
-mod predicate_stats;
-pub mod spec;
-pub mod table;
-#[cfg(feature = "fulltext")]
-pub mod tantivy;
-
-pub use catalog::Catalog;
-pub use catalog::CatalogFactory;
-pub use catalog::FileSystemCatalog;
-
-pub use table::{
-    CommitMessage, DataSplit, DataSplitBuilder, DeletionFile, PartitionBucket, Plan, RESTEnv,
-    RESTSnapshotCommit, ReadBuilder, RenamingSnapshotCommit, RowRange, SnapshotCommit,
-    SnapshotManager, Table, TableCommit, TableRead, TableScan, TableWrite, TagManager,
-    WriteBuilder,
-};
+impl Default for VortexFormatOptions {
+    fn default() -> Self {
+        Self {
+            read_batch_size: 1024,
+            write_batch_size: 1024,
+            write_batch_memory: 1024 * 1024 * 128, // 128MB
+        }
+    }
+}

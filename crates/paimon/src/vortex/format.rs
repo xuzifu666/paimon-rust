@@ -15,36 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-mod error;
-pub use error::Error;
-pub use error::Result;
+//! File format trait definition.
 
-pub mod common;
-pub use common::{CatalogOptions, Options};
+use crate::spec::RowType;
+use crate::Result;
 
-pub mod api;
-pub use api::rest_api::RESTApi;
+/// Trait for file format implementations.
+pub trait FileFormat: Send + Sync {
+    /// Get the format name.
+    fn name(&self) -> &str;
 
-pub mod arrow;
-pub mod btree;
-pub mod catalog;
-mod deletion_vector;
-pub mod file_index;
-pub mod vortex;
-pub mod io;
-mod predicate_stats;
-pub mod spec;
-pub mod table;
-#[cfg(feature = "fulltext")]
-pub mod tantivy;
-
-pub use catalog::Catalog;
-pub use catalog::CatalogFactory;
-pub use catalog::FileSystemCatalog;
-
-pub use table::{
-    CommitMessage, DataSplit, DataSplitBuilder, DeletionFile, PartitionBucket, Plan, RESTEnv,
-    RESTSnapshotCommit, ReadBuilder, RenamingSnapshotCommit, RowRange, SnapshotCommit,
-    SnapshotManager, Table, TableCommit, TableRead, TableScan, TableWrite, TagManager,
-    WriteBuilder,
-};
+    /// Validate if the row type is supported by this format.
+    fn validate(&self, row_type: &RowType) -> Result<()>;
+}
