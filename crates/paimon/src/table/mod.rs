@@ -58,6 +58,7 @@ mod write_builder;
 
 use crate::Result;
 use arrow_array::RecordBatch;
+pub use branch_manager::BranchManager;
 pub use commit_message::CommitMessage;
 pub use cow_writer::{CopyOnWriteMergeWriter, FileInfo};
 pub use data_evolution_writer::DataEvolutionWriter;
@@ -66,7 +67,6 @@ pub use full_text_search_builder::FullTextSearchBuilder;
 use futures::stream::BoxStream;
 pub use read_builder::ReadBuilder;
 pub use rest_env::RESTEnv;
-pub use branch_manager::BranchManager;
 pub use schema_manager::SchemaManager;
 pub use snapshot_commit::{RESTSnapshotCommit, RenamingSnapshotCommit, SnapshotCommit};
 pub use snapshot_manager::SnapshotManager;

@@ -64,7 +64,11 @@ impl SchemaManager {
 
     /// Create a SchemaManager for a branch of this table.
     pub fn with_branch(&self, branch_name: &str) -> Self {
-        let branch_path = format!("{}/branch/branch-{}", self.table_path.trim_end_matches('/'), branch_name);
+        let branch_path = format!(
+            "{}/branch/branch-{}",
+            self.table_path.trim_end_matches('/'),
+            branch_name
+        );
         Self::new(self.file_io.clone(), branch_path)
     }
 

@@ -54,7 +54,12 @@ impl BranchManager {
 
     /// Path to the branch sub-directory for the given name (e.g. `branch/branch-my_branch`).
     pub fn branch_path(&self, branch_name: &str) -> String {
-        format!("{}/{}{}", self.branch_directory(), BRANCH_PREFIX, branch_name)
+        format!(
+            "{}/{}{}",
+            self.branch_directory(),
+            BRANCH_PREFIX,
+            branch_name
+        )
     }
 
     /// Validate branch name format.
@@ -141,7 +146,8 @@ impl BranchManager {
         self.validate_branch(branch_name).await?;
         let schema_manager = SchemaManager::new(self.file_io.clone(), self.table_path.clone());
         if let Some(latest) = schema_manager.latest().await? {
-            self.copy_schemas_to_branch(branch_name, latest.id()).await?;
+            self.copy_schemas_to_branch(branch_name, latest.id())
+                .await?;
         }
         Ok(())
     }
@@ -154,16 +160,16 @@ impl BranchManager {
     ) -> crate::Result<()> {
         self.validate_branch(branch_name).await?;
         let tag_manager = TagManager::new(self.file_io.clone(), self.table_path.clone());
-        let snapshot = tag_manager
-            .get(tag_name)
-            .await?
-            .ok_or_else(|| crate::Error::DataInvalid {
-                message: format!("Tag '{}' does not exist.", tag_name),
-                source: None,
-            })?;
+        let snapshot =
+            tag_manager
+                .get(tag_name)
+                .await?
+                .ok_or_else(|| crate::Error::DataInvalid {
+                    message: format!("Tag '{}' does not exist.", tag_name),
+                    source: None,
+                })?;
 
-        let snapshot_manager =
-            SnapshotManager::new(self.file_io.clone(), self.table_path.clone());
+        let snapshot_manager = SnapshotManager::new(self.file_io.clone(), self.table_path.clone());
 
         // Copy tag file to branch
         let tag_src = tag_manager.tag_path(tag_name);
@@ -301,7 +307,12 @@ mod tests {
         output.write(Bytes::from(json)).await.unwrap();
     }
 
-    async fn write_tag(file_io: &FileIO, tag_manager: &TagManager, name: &str, snapshot: &Snapshot) {
+    async fn write_tag(
+        file_io: &FileIO,
+        tag_manager: &TagManager,
+        name: &str,
+        snapshot: &Snapshot,
+    ) {
         let path = tag_manager.tag_path(name);
         let json = serde_json::to_string(snapshot).unwrap();
         let output = file_io.new_output(&path).unwrap();
