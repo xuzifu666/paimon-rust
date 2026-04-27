@@ -226,7 +226,41 @@ impl BranchManager {
         }
         let src = self.branch_path(from);
         let dst = self.branch_path(to);
-        self.file_io.rename(&src, &dst).await?;
+        match self.file_io.rename(&src, &dst).await {
+            Ok(()) => Ok(()),
+            Err(crate::Error::IoUnexpected { ref source, .. })
+                if source.kind() == opendal::ErrorKind::Unsupported =>
+            {
+                self.copy_dir_recursive(&src, &dst).await?;
+                self.file_io.delete_dir(&src).await?;
+                Ok(())
+            }
+            Err(e) => Err(e),
+        }
+    }
+
+    /// Recursively copy a directory tree from src to dst.
+    async fn copy_dir_recursive(&self, src: &str, dst: &str) -> crate::Result<()> {
+        use std::collections::VecDeque;
+
+        self.file_io.mkdirs(dst).await?;
+        let mut queue = VecDeque::new();
+        queue.push_back((src.to_string(), dst.to_string()));
+
+        while let Some((current_src, current_dst)) = queue.pop_front() {
+            self.file_io.mkdirs(&current_dst).await?;
+            let statuses = self.file_io.list_status(&current_src).await?;
+            for status in statuses {
+                let name = get_basename(&status.path).trim_end_matches('/');
+                let src_path = format!("{}/{}", current_src.trim_end_matches('/'), name);
+                let dst_path = format!("{}/{}", current_dst.trim_end_matches('/'), name);
+                if status.is_dir {
+                    queue.push_back((src_path, dst_path));
+                } else {
+                    self.file_io.copy_file(&src_path, &dst_path).await?;
+                }
+            }
+        }
         Ok(())
     }
 
@@ -255,19 +289,6 @@ mod tests {
 
     fn test_file_io() -> FileIO {
         FileIOBuilder::new("memory").build().unwrap()
-    }
-
-    fn test_fs_file_io() -> FileIO {
-        FileIOBuilder::new("file").build().unwrap()
-    }
-
-    fn local_file_path(path: &std::path::Path) -> String {
-        let normalized = path.to_string_lossy().replace('\\', "/");
-        if normalized.starts_with('/') {
-            format!("file:{normalized}")
-        } else {
-            format!("file:/{normalized}")
-        }
     }
 
     fn test_schema() -> TableSchema {
@@ -482,9 +503,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_rename_branch() {
-        let tmp = tempfile::tempdir().unwrap();
-        let table_path = local_file_path(&tmp.path().join("test_rename_branch"));
-        let file_io = test_fs_file_io();
+        let file_io = test_file_io();
+        let table_path = "memory:/test_rename_branch".to_string();
         let schema_manager = SchemaManager::new(file_io.clone(), table_path.clone());
         write_schema(&file_io, &schema_manager, &test_schema()).await;
 
@@ -540,9 +560,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_rename_branch_multiple_times() {
-        let tmp = tempfile::tempdir().unwrap();
-        let table_path = local_file_path(&tmp.path().join("test_rename_multi"));
-        let file_io = test_fs_file_io();
+        let file_io = test_file_io();
+        let table_path = "memory:/test_rename_multi".to_string();
         let schema_manager = SchemaManager::new(file_io.clone(), table_path.clone());
         write_schema(&file_io, &schema_manager, &test_schema()).await;
 
