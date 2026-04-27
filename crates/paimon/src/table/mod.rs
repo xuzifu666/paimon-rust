@@ -19,6 +19,7 @@
 
 pub(crate) mod bin_pack;
 mod blob_file_writer;
+mod branch_manager;
 mod bucket_assigner;
 mod bucket_assigner_constant;
 mod bucket_assigner_cross;
@@ -65,6 +66,7 @@ pub use full_text_search_builder::FullTextSearchBuilder;
 use futures::stream::BoxStream;
 pub use read_builder::ReadBuilder;
 pub use rest_env::RESTEnv;
+pub use branch_manager::BranchManager;
 pub use schema_manager::SchemaManager;
 pub use snapshot_commit::{RESTSnapshotCommit, RenamingSnapshotCommit, SnapshotCommit};
 pub use snapshot_manager::SnapshotManager;
