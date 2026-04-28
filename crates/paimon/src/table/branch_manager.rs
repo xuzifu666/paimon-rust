@@ -110,8 +110,8 @@ impl BranchManager {
 
     /// Check if a branch exists.
     pub async fn branch_exists(&self, branch_name: &str) -> crate::Result<bool> {
-        let names = self.list_all().await?;
-        Ok(names.iter().any(|n| n == branch_name))
+        let path = format!("{}/", self.branch_path(branch_name));
+        self.file_io.exists(&path).await
     }
 
     /// List all branch names sorted ascending. Returns an empty vector when the
